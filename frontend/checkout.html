@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QuickEats - Checkout</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Fredoka', sans-serif;
+      background-color: #2c2f48;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #1e2031;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+
+    nav ul {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      gap: 1rem;
+    }
+
+    nav ul li a {
+      color: #ffcc00;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    main.checkout {
+      max-width: 600px;
+      margin: 2rem auto;
+      background-color: #3d405b;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    main h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #ffcc00;
+    }
+
+    form label {
+      display: block;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    form input, form textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+
+    form button {
+      width: 100%;
+      margin-top: 1.5rem;
+      padding: 0.9rem;
+      background-color: #ffcc00;
+      color: #1e2031;
+      font-weight: bold;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    form button:hover {
+      background-color: #e6b800;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      padding: 1rem;
+      background-color: #1e2031;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>QuickEats</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="menu.html">Menu</a></li>
+        <li><a href="cart.html">Cart</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="checkout">
+    <h2>Checkout</h2>
+    <form id="checkout-form">
+      <label for="name">Full Name</label>
+      <input type="text" id="name" placeholder="Enter your full name" required />
+
+      <label for="email">Email Address</label>
+      <input type="email" id="email" placeholder="you@example.com" required />
+
+      <label for="phone">Phone Number</label>
+      <input type="tel" id="phone" placeholder="1234567890" required />
+
+      <label for="address">Delivery Address</label>
+      <textarea id="address" rows="4" placeholder="House No, Street, City, Zip Code" required></textarea>
+
+      <button type="submit">Place Order</button>
+    </form>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 QuickEats. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // On form submit, save the data to localStorage and send to backend
+    document.getElementById('checkout-form').addEventListener('submit', async function (e) {
+      e.preventDefault(); // Prevent form submission
+
+      const customerName = document.getElementById('name').value;
+      const customerEmail = document.getElementById('email').value;
+      const customerPhone = document.getElementById('phone').value;
+      const customerAddress = document.getElementById('address').value;
+
+      // Validate form inputs (optional: check if fields are empty)
+      if (!customerName || !customerEmail || !customerPhone || !customerAddress) {
+        alert('Please fill out all fields.');
+        return;
+      }
+
+      // Get the cart from localStorage
+      const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+      if (cart.length === 0) {
+        alert('Your cart is empty. Please add items before checking out.');
+        return;
+      }
+
+      // Save data to localStorage
+      localStorage.setItem('customerName', customerName);
+      localStorage.setItem('customerEmail', customerEmail);
+      localStorage.setItem('customerPhone', customerPhone);
+      localStorage.setItem('customerAddress', customerAddress);
+      localStorage.setItem('cart', JSON.stringify(cart));
+
+      // Prepare data for the API request
+      const orderData = {
+        customerName,
+        customerEmail,
+        customerPhone,
+        customerAddress,
+        cart,
+      };
+
+      // Confirm order details
+      const orderConfirmation = confirm(`Please confirm your order:\n\nName: ${customerName}\nEmail: ${customerEmail}\nPhone: ${customerPhone}\nAddress: ${customerAddress}\n\nDo you want to place the order?`);
+      if (!orderConfirmation) {
+        return;
+      }
+
+      // Send data to the backend API
+      try {
+        const response = await fetch('http://localhost:5000/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData),
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          console.log('Order submitted:', result);
+          // Redirect to confirmation page
+          window.location.href = 'confirmation.html';
+        } else {
+          console.log('Error submitting order:', result);
+          alert('Something went wrong. Please try again later.');
+        }
+      } catch (error) {
+        console.log('Error:', error);
+        alert('Something went wrong. Please try again later.');
+      }
+    });
+  </script>
+</body>
+</html>
